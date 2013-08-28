@@ -52,6 +52,11 @@ class Chef
       :description => "The image ID for the server",
       :proc => Proc.new { |i| Chef::Config[:knife][:image] = i }
 
+      option :snapshot,
+      :long => "--snapshot SNAPSHOT_ID",
+      :description => "The snapshot ID for the server",
+      :proc => Proc.new { |i| Chef::Config[:knife][:snapshot] = i }
+
       option :security_groups,
       :short => "-G X,Y,Z",
       :long => "--groups X,Y,Z",
@@ -246,6 +251,7 @@ class Chef
         server_def = {
         :name => node_name,
         :image_ref => locate_config_value(:image),
+        :snapshot_ref => locate_config_value(:snapshot),
         :flavor_ref => locate_config_value(:flavor),
         :security_groups => locate_config_value(:security_groups),
         :key_name => locate_config_value(:openstack_ssh_key_id)
@@ -253,6 +259,7 @@ class Chef
 
       Chef::Log.debug("Name #{node_name}")
       Chef::Log.debug("Image #{locate_config_value(:image)}")
+      Chef::Log.debug("Snapshot #{locate_config_value(:snapshot)}")
       Chef::Log.debug("Flavor #{locate_config_value(:flavor)}")
       Chef::Log.debug("Requested Floating IP #{locate_config_value(:floating_ip)}")
       Chef::Log.debug("Security Groups #{locate_config_value(:security_groups)}")
@@ -288,6 +295,7 @@ class Chef
 
       msg_pair("Flavor", server.flavor['id'])
       msg_pair("Image", server.image['id'])
+      msg_pair("Snapshot", server.snapshot['id'])
       msg_pair("SSH Identity File", config[:identity_file])
       msg_pair("SSH Keypair", server.key_name) if server.key_name
       msg_pair("SSH Password", server.password) if (server.password && !server.key_name)
@@ -349,6 +357,7 @@ class Chef
       msg_pair("Instance ID", server.id)
       msg_pair("Flavor", server.flavor['id'])
       msg_pair("Image", server.image['id'])
+      msg_pair("Snapshot", server.snapshot['id'])
       msg_pair("SSH Keypair", server.key_name) if server.key_name
       msg_pair("SSH Password", server.password) if (server.password && !server.key_name)
       msg_pair("Public IP Address", primary_public_ip_address(server.addresses)) if primary_public_ip_address(server.addresses)
@@ -401,6 +410,10 @@ class Chef
 
     def image
       @image ||= connection.images.get(locate_config_value(:image))
+    end
+
+    def snapshot
+      @snapshot ||= connection.snapshot.get(locate_config_value(:snapshot))
     end
 
     def is_floating_ip_valid
